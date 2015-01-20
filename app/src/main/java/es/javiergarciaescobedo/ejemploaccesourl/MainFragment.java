@@ -25,12 +25,11 @@ import java.net.URL;
 public class MainFragment extends Fragment {
 
     EditText editText = null;
+    String answer = "";
 
     public void accessUrl() {
         Toast.makeText(getActivity(), "Enviando datos", Toast.LENGTH_LONG).show();
-        Log.d("kk", "pulsado");
         UrlGet urlGet = new UrlGet();
-        Log.d("kk", "paso2");
         urlGet.execute("http://www.rtve.es/rss/temas_espana.xml");
     }
 
@@ -41,6 +40,10 @@ public class MainFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
         editText = (EditText) rootView.findViewById(R.id.editText);
         return rootView;
+    }
+
+    public void showData() {
+        editText.setText(answer, TextView.BufferType.NORMAL);
     }
 
     public class UrlGet extends AsyncTask<String, Void, InputStream> {
@@ -55,8 +58,6 @@ public class MainFragment extends Fragment {
             try {
                 URL url = new URL(urls[0]);
 
-
-                //URL url = new URL("http://www.android.com/");
                 urlConnection = (HttpURLConnection) url.openConnection();
                 //Acortar el tiempo de intento de conexión y de recepción de datos
                 urlConnection.setConnectTimeout(10000);
@@ -65,7 +66,6 @@ public class MainFragment extends Fragment {
 
                 BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
                 String inputLine;
-                String answer = "Respuesta: ";
 
                 try {
                     while ((inputLine = br.readLine()) != null) {
@@ -76,32 +76,29 @@ public class MainFragment extends Fragment {
                     e.printStackTrace();
                 }
                 Log.d(UrlGet.class.getName(), answer);
-                editText.setText(answer, TextView.BufferType.NORMAL);
             } catch (IOException e) {
                 connectionError = true;
                 e.printStackTrace();
             } finally {
-//                urlConnection.disconnect();
-//                if (inputStream != null) {
-//                    try {
-//                        inputStream.close();
-//                    } catch (IOException e) {
-//                        e.printStackTrace();
-//                    }
-//                }
+                urlConnection.disconnect();
+                if (inputStream != null) {
+                    try {
+                        inputStream.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
             return inputStream;
         }
 
         @Override
         protected void onPostExecute(InputStream inputStream) {
-            Log.d(UrlGet.class.getName(), "PostExceute");
             if(connectionError) {
-                Log.d(UrlGet.class.getName(), "Mostranbdo error");
                 Toast.makeText(getActivity(), "No se ha podido realizar la conexión con el servidor", Toast.LENGTH_LONG).show();;
-                Log.d(UrlGet.class.getName(), "Mostrado error");
             } else {
                 Toast.makeText(getActivity(), "Datos enviados correctamente", Toast.LENGTH_LONG).show();
+                showData();
             }
         }
 
