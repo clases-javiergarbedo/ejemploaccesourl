@@ -14,13 +14,12 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Acceder"
-            android:id="@+id/button"
-            android:onClick="buttonPressed" />
+            android:id="@+id/button1" />
 
         <EditText
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
-            android:id="@+id/editText" />
+            android:id="@+id/editText1" />
     </LinearLayout>
 
 </FrameLayout>
