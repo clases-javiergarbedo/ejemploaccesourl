@@ -1,12 +1,8 @@
 package es.javiergarciaescobedo.ejemploaccesourl;
 
-import android.content.Context;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,9 +11,8 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
+
+import es.javiergarciaescobedo.android.helper.XmlDownloader;
 
 
 // Más información sobre la conexión HTTP desde Android en:
@@ -63,15 +58,12 @@ public class MainFragment extends Fragment
                 String stringUrl = "http://www.rtve.es/rss/temas_espana.xml";
 
                 //Comprobar que hay conexión a Internet
-                ConnectivityManager connMgr = (ConnectivityManager)
-                        getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
-                NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
-                if (networkInfo != null && networkInfo.isConnected()) {
+                if(XmlDownloader.hasInternetConnection(getActivity())) {
                     // Hay conexión a Internet, así que se debe iniciar la descarga.
                     // La llamada al método execute inicia la ejecución del método doInBackground
                     // de la clase asíncrona (ejecutada en segundo plano) DownloadWebpageTask que
                     // se encuentra declarada más adelante
-                    new DownloadWebpageTask().execute(stringUrl);
+                    new DownloadXmlTask().execute(stringUrl);
                 } else {
                     // No hay conexión a Internet
                     Toast.makeText(getActivity(), "No hay conexión a Internet", Toast.LENGTH_LONG).show();
@@ -83,7 +75,7 @@ public class MainFragment extends Fragment
     // Se usa una clase heredada de AsyncTask para que se ejecute en segundo plano, de manera que
     // la descarga de datos se realice sin que se quede parada la aplicación durante el tiempo que
     // dure la descarga.
-    private class DownloadWebpageTask extends AsyncTask<String, Void, String> {
+    private class DownloadXmlTask extends AsyncTask<String, Void, String> {
 
         // Las operaciones que se desean ejecutar en segundo plano se deben indicar en el método
         // doInBackground que recibirá como parámetro un array de Strings.
@@ -96,7 +88,7 @@ public class MainFragment extends Fragment
             try {
                 // Intentar realizar la descarga de la URL recibida por parámetro, la cual se ha
                 // indicado en la llamada al método execute
-                return downloadUrl(urls[0]);
+                return XmlDownloader.downloadUrlContent(urls[0]);
             } catch (IOException e) {
                 return null;
             }
@@ -120,49 +112,5 @@ public class MainFragment extends Fragment
         }
     }
 
-    // Retorna el contenido de la URL que se indique por parámetro
-    private String downloadUrl(String myurl) throws IOException {
-        InputStream is = null;
-
-        try {
-            URL url = new URL(myurl);
-
-            // Configurar la conexión acortando el tiempo de intento de conexión a 15 segundos y
-            // el de recepción de datos a 10 segundos. El método de conexión será GET y se permite
-            // la recepción de datos
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setReadTimeout(10000);
-            conn.setConnectTimeout(15000);
-            conn.setRequestMethod("GET");
-            conn.setDoInput(true);
-
-            // Iniciar la conexión con la URL
-            Log.d(DEBUG_TAG, "Conectando con " + myurl);
-            conn.connect();
-
-            // Obtener el código de respuesta
-            int response = conn.getResponseCode();
-            Log.d(DEBUG_TAG, "El código de respuesta HTTP ha sido: " + response);
-
-            // Obtener el flujo de datos con el contenido de la URL
-            is = conn.getInputStream();
-
-            //Leer el flujo de datos recibido convirtiéndolo a String y retornarlo
-            String contentAsString = convertStreamToString(is);
-            return contentAsString;
-
-            // Asegurar que se queda cerrado el InputStream una vez utilizado
-        } finally {
-            if (is != null) {
-                is.close();
-            }
-        }
-    }
-
-    // Método auxiliar con truco para convertir InputStream a String
-    private String convertStreamToString(java.io.InputStream is) {
-        java.util.Scanner s = new java.util.Scanner(is).useDelimiter("\\A");
-        return s.hasNext() ? s.next() : "";
-    }
 
 }
